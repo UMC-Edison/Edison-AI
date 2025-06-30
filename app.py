@@ -34,7 +34,7 @@ def vectorize(memo_list: MemoList):
     ]
 
     # Doc2Vec 학습
-    model = Doc2Vec(vector_size=50, window=5, min_count=2, workers=4, epochs=40)
+    model = Doc2Vec(vector_size=50, window=5, min_count=1, workers=4, epochs=40)
     model.build_vocab(documents)
     model.train(documents, total_examples=model.corpus_count, epochs=model.epochs)
 
