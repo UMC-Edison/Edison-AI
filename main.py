@@ -35,30 +35,25 @@ def simple_tokenize(text):
     return [token for token in tokens if len(token) > 1]
 
 @app.post("/ai")
-def vectorize(memo_list: MemoList):
-    memos = memo_list.memos
+def vectorize(memo_list: List[Memo]):
+
+    memos = memo_list
 
     # TaggedDocument
     documents = [
-        TaggedDocument(words=simple_tokenize(m.content), tags=[m.id])
+        TaggedDocument(words=simple_tokenize(m.content), tags=[m.localIdx])
         for m in memos
     ]
 
-    # Doc2Vec 학습
-    model = Doc2Vec(vector_size=50, window=5, min_count=1, workers=4, epochs=40)
-    model.build_vocab(documents)
-    model.train(documents, total_examples=model.corpus_count, epochs=model.epochs)
-
-    vectors = np.array([model.dv[m.id] for m in memos])
+    vectors = np.array([model.dv[m.localIdx] for m in memos])
 
     # TSNE: perplexity 조절
     perplexity = min(30, len(memos) - 1) if len(memos) > 1 else 1
-
     tsne = TSNE(n_components=2, random_state=42, perplexity=perplexity)
     coords = tsne.fit_transform(vectors)
 
     # 결과 반환 (ID + 좌표)
-    result = [{"id": m.id, "x": float(x), "y": float(y)} for m, (x, y) in zip(memos, coords)]
+    result = [{"id": m.localIdx, "x": float(x), "y": float(y)} for m, (x, y) in zip(memos, coords)]
     return result
 
 @app.post("/similarity", response_model = SimilarityResponse)
