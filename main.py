@@ -8,12 +8,25 @@ import re
 
 app = FastAPI()
 
+# 모델 로드
+MODEL_PATH = "models/memo_doc2vec.model"
+if not os.path.exists(MODEL_PATH):
+    raise FileNotFoundError(f"모델이 존재하지 않음: {MODEL_PATH}")
+model = Doc2Vec.load(MODEL_PATH)
+
+# 요청
 class Memo(BaseModel):
-    id: str
+    localIdx: str
     content: str
 
-class MemoList(BaseModel):
+class SimilarityRequest(BaseModel):
+    keyword: str
     memos: List[Memo]
+
+# 응답
+class SimilarityResponse(BaseModel):
+    keyword: str
+    top_ids: List[str]
 
 # 토큰화 전처리 함수
 def simple_tokenize(text):
@@ -24,8 +37,6 @@ def simple_tokenize(text):
 @app.post("/ai")
 def vectorize(memo_list: MemoList):
     memos = memo_list.memos
-    if len(memos) < 2:
-        return [{"id": m.id, "x": 0.0, "y": 0.0} for m in memos]
 
     # TaggedDocument
     documents = [
@@ -49,3 +60,32 @@ def vectorize(memo_list: MemoList):
     # 결과 반환 (ID + 좌표)
     result = [{"id": m.id, "x": float(x), "y": float(y)} for m, (x, y) in zip(memos, coords)]
     return result
+
+@app.post("/similarity", response_model = SimilarityResponse)
+def calculate_similarity(req:SimilarityRequest):
+    keywords_token = simple_tokenize(req.keyword)
+
+    # 키워드 토큰화 불가
+    if not keyword_tokens:
+            return {"keyword": req.keyword, "top_ids": []}
+
+    keyword_vec = model.infer_vector(keyword_tokens)
+    scored = []
+
+    for memo in req.memos:
+        tokens = simple_tokenize(memo.content)
+        if not tokens:
+            continue
+        memo_vec = model.infer_vector(tokens)
+        sim = cosine_similarity([keyword_vec], [memo_vec])[0][0]
+
+        if sim >= 0.5:
+            scored.append((memo.localIdx, sim)
+
+    top_ids = [id for id, _ in sorted(scored, key= lambda x: x[1], reverse = True)[:10]]
+
+    return {
+        "keyword": req.keyword,
+        "top_ids": top_ids
+    }
+
