@@ -82,7 +82,7 @@ def calculate_similarity(req: SimilarityRequest):
         memo_vec = model.infer_vector(tokens)
         sim = float(cosine_similarity([keyword_vec], [memo_vec])[0][0])
 
-        if sim >= 0.5:
+        if sim >= 0.0:
             scored.append(SimilarityResultItem(localIdx=memo.localIdx, similarity=sim))
 
     sorted_results = sorted(scored, key=lambda x: x.similarity, reverse=True)
