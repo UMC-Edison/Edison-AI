@@ -3,8 +3,10 @@ from pydantic import BaseModel
 from typing import List
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from sklearn.manifold import TSNE
+from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 import re
+import os
 
 app = FastAPI()
 
@@ -58,7 +60,7 @@ def vectorize(memo_list: List[Memo]):
 
 @app.post("/similarity", response_model = SimilarityResponse)
 def calculate_similarity(req:SimilarityRequest):
-    keywords_token = simple_tokenize(req.keyword)
+    keyword_tokens = simple_tokenize(req.keyword)
 
     # 키워드 토큰화 불가
     if not keyword_tokens:
@@ -75,7 +77,7 @@ def calculate_similarity(req:SimilarityRequest):
         sim = cosine_similarity([keyword_vec], [memo_vec])[0][0]
 
         if sim >= 0.5:
-            scored.append((memo.localIdx, sim)
+            scored.append((memo.localIdx, sim))
 
     top_ids = [id for id, _ in sorted(scored, key= lambda x: x[1], reverse = True)[:10]]
 
