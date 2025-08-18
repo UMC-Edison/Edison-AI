@@ -36,10 +36,10 @@ jobs:
             docker pull clairekwak/edison_ai:${{ github.sha }}
 
             # 기존에 실행 중인 컨테이너가 있으면 중지하고 삭제 (없어도 오류가 나지 않도록 || true 추가)
-            docker stop my-ai-server || true
-            docker rm my-ai-server || true
+            docker stop edison-ai-server || true
+            docker rm edison-ai-server || true
 
-            docker run -d -p 8000:8000 --name my-ai-server clairekwak/edison_ai:${{ github.sha }}
+            docker run -d -p 8000:8000 --name edison-ai-server clairekwak/edison_ai:${{ github.sha }}
             
             # 사용하지 않는 오래된 이미지를 삭제
             docker image prune -af
