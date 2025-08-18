@@ -81,6 +81,7 @@ def calculate_similarity(req: SimilarityRequest):
 
         memo_vec = model.infer_vector(tokens)
         sim = float(cosine_similarity([keyword_vec], [memo_vec])[0][0])
+        print(f"키워드: {req.keyword}, 메모: {memo.content[:30]}..., 유사도: {sim}")
 
         if sim >= 0.0:
             scored.append(SimilarityResultItem(localIdx=memo.localIdx, similarity=sim))
