@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import List
 from gensim.models.doc2vec import Doc2Vec
+from sklearn.preprocessing import MinMaxScaler
 from sklearn.manifold import TSNE
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
@@ -10,13 +11,11 @@ import os
 
 app = FastAPI()
 
-# --- 모델 로드 ---
 MODEL_PATH = "models/memo_doc2vec.model"
 if not os.path.exists(MODEL_PATH):
     raise FileNotFoundError(f"모델 파일이 존재하지 않습니다: {MODEL_PATH}")
 model = Doc2Vec.load(MODEL_PATH)
 
-# --- 요청 및 응답 모델 ---
 class Memo(BaseModel):
     localIdx: str
     content: str
@@ -61,7 +60,11 @@ def vectorize(memos: List[Memo]):
     tsne = TSNE(n_components=2, random_state=42, perplexity=perplexity)
     coords = tsne.fit_transform(vector_array)
 
-    result = [{"localIdx": m.localIdx, "x": float(x), "y": float(y)} for m, (x, y) in zip(valid_memos, coords)]
+    scaler = MinMaxScaler(feature_range=(-10, 10))
+    scaler_coords = scaler.fit_transform(coords)
+
+    result = [{"localIdx": m.localIdx, "x": float(x), "y": float(y)} for m, (x, y) in zip(valid_memos, scaler_coords)]
+
     return result
 
 @app.post("/similarity")
