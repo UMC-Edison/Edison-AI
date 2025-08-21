@@ -60,7 +60,7 @@ def vectorize(memos: List[Memo]):
     tsne = TSNE(n_components=2, random_state=42, perplexity=perplexity)
     coords = tsne.fit_transform(vector_array)
 
-    scaler = MinMaxScaler(feature_range=(-10, 10))
+    scaler = MinMaxScaler(feature_range=(-5, 5))
     scaler_coords = scaler.fit_transform(coords)
 
     result = [{"localIdx": m.localIdx, "x": float(x), "y": float(y)} for m, (x, y) in zip(valid_memos, scaler_coords)]
