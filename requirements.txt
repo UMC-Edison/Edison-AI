@@ -3,3 +3,7 @@ uvicorn
 gensim
 scikit-learn
 numpy
+Korpora
+feedparser
+trafilatura
+kiwipiepy

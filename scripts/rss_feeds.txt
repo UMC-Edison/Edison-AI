@@ -1,0 +1,17 @@
+# 브런치 전체 + 주요 카테고리
+https://brunch.co.kr/rss
+https://brunch.co.kr/keyword/일상/rss
+https://brunch.co.kr/keyword/창작/rss
+https://brunch.co.kr/keyword/에세이/rss
+https://brunch.co.kr/keyword/생각/rss
+https://brunch.co.kr/keyword/기록/rss
+https://brunch.co.kr/keyword/여행/rss
+
+# ㅍㅍㅅㅅ
+https://ppss.kr/feed
+
+# 네이버 D2
+https://d2.naver.com/d2.xml
+
+# 오마이뉴스
+http://rss.ohmynews.com/rss/top.xml
