@@ -12,7 +12,7 @@ def main():
     model = Doc2Vec.load("models/memo_doc2vec.model")
 
     # 2. 새 데이터 로드
-    path = "data/raw/setA_memos.txt"
+    path = "data/raw/merged.txt"
     new_docs = [line.strip() for line in open(path, encoding="utf-8") if line.strip()]
     tagged_new = [TaggedDocument(words=tokenize_ko(s), tags=[f"new_{i}"])
                   for i, s in enumerate(new_docs)]
