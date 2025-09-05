@@ -11,7 +11,7 @@ import os
 
 app = FastAPI()
 
-MODEL_PATH = "models/memo_doc2vec.model"
+MODEL_PATH = "models/memo_doc2vec_finetuned.model"
 if not os.path.exists(MODEL_PATH):
     raise FileNotFoundError(f"모델 파일이 존재하지 않습니다: {MODEL_PATH}")
 model = Doc2Vec.load(MODEL_PATH)
