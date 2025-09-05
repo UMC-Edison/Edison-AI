@@ -32,6 +32,9 @@ class SimilarityResponse(BaseModel):
     keyword: str
     results: List[SimilarityResultItem]
 
+class SpaceMapRequestDto(BaseModel):
+    memos: List[Memo]
+
 def simple_tokenize(text):
     text = re.sub(r"[^가-힣a-zA-Z0-9\s]", "", text.lower())
     tokens = text.split()
@@ -39,7 +42,9 @@ def simple_tokenize(text):
 
 
 @app.post("/ai")
-def vectorize(memos: List[Memo]):
+def vectorize(req: SpaceMapRequestDto):
+    memos = req.memos
+
     if not memos:
         return []
 
