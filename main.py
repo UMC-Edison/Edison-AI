@@ -42,35 +42,44 @@ def simple_tokenize(text):
 
 
 @app.post("/ai")
-def vectorize(req: SpaceMapRequestDto):
-    memos = req.memos
-
-    if not memos:
-        return []
+def vectorize(memos: List[Memo]):
+    print("받은 요청 길이:", len(memos))
 
     vectors = []
     valid_memos = []
     for memo in memos:
         tokens = simple_tokenize(memo.content)
         if tokens:
-            vectors.append(model.infer_vector(tokens))
-            valid_memos.append(memo)
+            try:
+                vec = model.infer_vector(tokens)
+                vectors.append(vec)
+                valid_memos.append(memo)
+            except Exception as e:
+                print("infer_vector 실패:", e)
 
     if not valid_memos:
         return []
 
     vector_array = np.array(vectors)
 
-    perplexity = min(30, len(valid_memos) - 1) if len(valid_memos) > 1 else 1
-    tsne = TSNE(n_components=2, random_state=42, perplexity=perplexity)
-    coords = tsne.fit_transform(vector_array)
+    # 🔑 t-SNE 안전 장치
+    if len(valid_memos) < 3:
+        coords = np.zeros((len(valid_memos), 2))
+    else:
+        perplexity = min(30, len(valid_memos) - 1)
+        tsne = TSNE(n_components=2, random_state=42, perplexity=perplexity)
+        coords = tsne.fit_transform(vector_array)
 
     scaler = MinMaxScaler(feature_range=(-5, 5))
     scaler_coords = scaler.fit_transform(coords)
 
-    result = [{"localIdx": m.localIdx, "x": float(x), "y": float(y)} for m, (x, y) in zip(valid_memos, scaler_coords)]
+    result = [
+        {"localIdx": m.localIdx, "x": float(x), "y": float(y)}
+        for m, (x, y) in zip(valid_memos, scaler_coords)
+    ]
 
     return result
+
 
 @app.post("/similarity")
 def calculate_similarity(req: SimilarityRequest):
