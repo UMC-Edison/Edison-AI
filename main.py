@@ -40,6 +40,20 @@ def simple_tokenize(text):
     tokens = text.split()
     return [token for token in tokens if len(token) > 1]
 
+# 버블 간격 띄우기
+def repel_points(xy, min_dist=0.15, n_iter=50, step=0.01):
+    xy = xy.copy()
+    for _ in range(n_iter):
+        for i in range(len(xy)):
+            for j in range(i+1, len(xy)):
+                diff = xy[i] - xy[j]
+                dist = np.linalg.norm(diff)
+                if dist < min_dist and dist > 1e-5:
+                    move = (min_dist - dist) * step * diff/dist
+                    xy[i] += move
+                    xy[j] -= move
+    return xy
+
 
 @app.post("/ai")
 def vectorize(memos: List[Memo]):
@@ -62,7 +76,6 @@ def vectorize(memos: List[Memo]):
 
     vector_array = np.array(vectors)
 
-    # 🔑 t-SNE 안전 장치
     if len(valid_memos) < 3:
         coords = np.zeros((len(valid_memos), 2))
     else:
@@ -72,6 +85,9 @@ def vectorize(memos: List[Memo]):
 
     scaler = MinMaxScaler(feature_range=(-5, 5))
     scaler_coords = scaler.fit_transform(coords)
+
+    # 간격 띄우기
+    scaler_coords = repel_points(scaler_coords, min_dist = 0.15, n_iter=50, step=0.01)
 
     result = [
         {"localIdx": m.localIdx, "x": float(x), "y": float(y)}
