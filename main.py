@@ -41,7 +41,7 @@ def simple_tokenize(text):
     return [token for token in tokens if len(token) > 1]
 
 # 버블 간격 띄우기
-def repel_points(xy, min_dist=0.25, n_iter=50, step=0.01):
+def repel_points(xy, min_dist=0.70, n_iter=50, step=0.01): 
     xy = xy.copy()
     for _ in range(n_iter):
         for i in range(len(xy)):
