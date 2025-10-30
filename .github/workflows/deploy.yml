@@ -26,6 +26,15 @@ jobs:
           tags: clairekwak/edison_ai:${{ github.sha }}
           push: true
 
+      - name: Upload nginx config
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.AWS_HOST }}
+          username: ${{ secrets.AWS_USERNAME }}
+          key: ${{ secrets.AWS_SSH_KEY }}
+          source: ./nginx/nginx.conf
+          target: /tmp/ai.umcedison.site.conf
+
       - name: Deploy to AWS EC2
         uses: appleboy/ssh-action@master
         with:
@@ -43,3 +52,12 @@ jobs:
             
             # 사용하지 않는 오래된 이미지를 삭제
             docker image prune -af
+
+            # nginx 설정 반영
+            sudo mv /tmp/ai.umcedison.site.conf /etc/nginx/sites-available/ai.umcedison.site.conf
+            sudo ln -sf /etc/nginx/sites-available/ai.umcedison.site.conf /etc/nginx/sites-enabled/ai.umcedison.site.conf
+
+            sudo mkdir -p /var/www/certbot
+            sudo chown www-data:www-data /var/www/certbot || true
+            
+            sudo nginx -t && sudo systemctl reload nginx
