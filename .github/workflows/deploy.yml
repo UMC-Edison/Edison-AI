@@ -26,15 +26,6 @@ jobs:
           tags: clairekwak/edison_ai:${{ github.sha }}
           push: true
 
-      - name: Upload nginx config
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.AWS_HOST }}
-          username: ${{ secrets.AWS_USERNAME }}
-          key: ${{ secrets.AWS_SSH_KEY }}
-          source: ./nginx/nginx.conf    # 리포지토리의 원본 파일
-          target: ~/                 # [ ⭐️ 수정 ⭐️ ] /tmp 대신 홈 디렉터리(~)로 전송
-
       - name: Deploy to AWS EC2
         uses: appleboy/ssh-action@master
         with:
@@ -44,30 +35,11 @@ jobs:
           script: |
             docker pull clairekwak/edison_ai:${{ github.sha }}
 
-            # 기존 컨테이너 중지 및 삭제
+            # 기존에 실행 중인 컨테이너가 있으면 중지하고 삭제 (없어도 오류가 나지 않도록 || true 추가)
             docker stop edison-ai-server || true
             docker rm edison-ai-server || true
 
-            # 새 컨테이너 실행 (8000번 포트로 실행)
             docker run -d -p 8000:8000 --name edison-ai-server clairekwak/edison_ai:${{ github.sha }}
             
-            # 오래된 이미지 삭제
+            # 사용하지 않는 오래된 이미지를 삭제
             docker image prune -af
-
-            # nginx 설정 반영
-            sudo rm -rf /etc/nginx/sites-enabled/ai.umcedison.site.conf || true
-            sudo rm -rf /etc/nginx/sites-available/ai.umcedison.site.conf || true
-            
-            # [ ⭐️ 수정 ⭐️ ] /tmp/nginx.conf 대신 홈 디렉터리(~/nginx.conf)에서 파일을 이동
-            sudo mv ~/nginx.conf /etc/nginx/sites-available/ai.umcedison.site.conf
-            
-            # 심볼릭 링크 생성
-            sudo ln -s /etc/nginx/sites-available/ai.umcedison.site.conf \
-                       /etc/nginx/sites-enabled/ai.umcedison.site.conf
-            
-            # Certbot용 디렉터리 생성
-            sudo mkdir -p /var/www/certbot
-            sudo chown www-data:www-data /var/www/certbot || true
-            
-            # Nginx 테스트 및 재시작
-            sudo nginx -t && sudo systemctl reload nginx
