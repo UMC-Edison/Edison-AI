@@ -26,8 +26,6 @@ jobs:
           tags: clairekwak/edison_ai:${{ github.sha }}
           push: true
 
-      # 'Upload nginx config' (scp-action) 단계는 삭제되었습니다.
-
       - name: Deploy to AWS EC2
         uses: appleboy/ssh-action@master
         with:
@@ -47,7 +45,6 @@ jobs:
             # 오래된 이미지 삭제
             docker image prune -af
 
-            # [ ⭐️ 핵심 수정 ⭐️ ]
             # EC2 서버에서 직접 Nginx 설정 파일을 생성합니다.
             cat << 'EOF' | sudo tee /tmp/nginx.conf
 server {
@@ -94,14 +91,16 @@ server {
 }
 EOF
 
-            # nginx 설정 반영 (rm -rf 로 혹시 모를 디렉터리/파일 모두 삭제)
+            # [ ⭐️ 중요 ⭐️ ]
+            # 'EOF' 줄은 반드시 맨 앞에 있어야 하고,
+            # 아래 명령어들은 다시 'script:' 블록의 들여쓰기와 일치해야 합니다.
+
+            # nginx 설정 반영
             sudo rm -rf /etc/nginx/sites-enabled/ai.umcedison.site.conf || true
             sudo rm -rf /etc/nginx/sites-available/ai.umcedison.site.conf || true
             
-            # /tmp에 생성된 파일을 sites-available로 이동
             sudo mv /tmp/nginx.conf /etc/nginx/sites-available/ai.umcedison.site.conf
             
-            # 심볼릭 링크 생성
             sudo ln -s /etc/nginx/sites-available/ai.umcedison.site.conf \
                        /etc/nginx/sites-enabled/ai.umcedison.site.conf
             
