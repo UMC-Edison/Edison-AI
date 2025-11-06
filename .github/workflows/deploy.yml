@@ -54,7 +54,7 @@ jobs:
             docker image prune -af
 
             # nginx 설정 반영
-            sudo rm -f  /etc/nginx/sites-enabled/ai.umcedison.site.conf || true
+            sudo rm -rf  /etc/nginx/sites-enabled/ai.umcedison.site.conf || true
             sudo rm -rf /etc/nginx/sites-available/ai.umcedison.site.conf || true
             sudo mv /tmp/nginx.conf /etc/nginx/sites-available/ai.umcedison.site.conf
             sudo ln -s /etc/nginx/sites-available/ai.umcedison.site.conf \
