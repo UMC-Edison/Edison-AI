@@ -26,6 +26,15 @@ jobs:
           tags: clairekwak/edison_ai:${{ github.sha }}
           push: true
 
+      - name: Upload nginx config
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.AWS_HOST }}
+          username: ${{ secrets.AWS_USERNAME }}
+          key: ${{ secrets.AWS_SSH_KEY }}
+          source: ./nginx/nginx.conf    # 리포지토리의 원본 파일
+          target: ~/                 # [ ⭐️ 수정 ⭐️ ] /tmp 대신 홈 디렉터리(~)로 전송
+
       - name: Deploy to AWS EC2
         uses: appleboy/ssh-action@master
         with:
@@ -45,62 +54,14 @@ jobs:
             # 오래된 이미지 삭제
             docker image prune -af
 
-            # EC2 서버에서 직접 Nginx 설정 파일을 생성합니다.
-            cat << 'EOF' | sudo tee /tmp/nginx.conf
-server {
-    listen 80;
-    listen [::]:80;
-
-    server_name ai.umcedison.site;
-
-    location /.well-known/acme-challenge/ {
-        root /var/www/certbot;
-    }
-
-    # 그 외 모든 HTTP 요청은 HTTPS로
-    location / {
-        return 301 https://$host$request_uri;
-    }
-}
-
-server {
-    listen 443 ssl http2;
-    listen [::]:443 ssl http2;
-
-    server_name ai.umcedison.site;
-
-    # SSL 인증서 경로 (Let's Encrypt) 
-    ssl_certificate     /etc/letsencrypt/live/ai.umcedison.site/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/ai.umcedison.site/privkey.pem;
-
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_prefer_server_ciphers on;
-
-    location / {
-        proxy_pass         http://localhost:8000; # 8000번 포트로 프록시
-        proxy_http_version 1.1;
-
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-EOF
-
-            # [ ⭐️ 중요 ⭐️ ]
-            # 'EOF' 줄은 반드시 맨 앞에 있어야 하고,
-            # 아래 명령어들은 다시 'script:' 블록의 들여쓰기와 일치해야 합니다.
-
             # nginx 설정 반영
             sudo rm -rf /etc/nginx/sites-enabled/ai.umcedison.site.conf || true
             sudo rm -rf /etc/nginx/sites-available/ai.umcedison.site.conf || true
             
-            sudo mv /tmp/nginx.conf /etc/nginx/sites-available/ai.umcedison.site.conf
+            # [ ⭐️ 수정 ⭐️ ] /tmp/nginx.conf 대신 홈 디렉터리(~/nginx.conf)에서 파일을 이동
+            sudo mv ~/nginx.conf /etc/nginx/sites-available/ai.umcedison.site.conf
             
+            # 심볼릭 링크 생성
             sudo ln -s /etc/nginx/sites-available/ai.umcedison.site.conf \
                        /etc/nginx/sites-enabled/ai.umcedison.site.conf
             
