@@ -32,8 +32,8 @@ jobs:
           host: ${{ secrets.AWS_HOST }}
           username: ${{ secrets.AWS_USERNAME }}
           key: ${{ secrets.AWS_SSH_KEY }}
-          source: ./nginx/nginx.conf
-          target: /tmp/ai.umcedison.site.conf
+          source: ./nginx/nginx.conf  
+          target: /tmp    
 
       - name: Deploy to AWS EC2
         uses: appleboy/ssh-action@master
@@ -54,9 +54,12 @@ jobs:
             docker image prune -af
 
             # nginx 설정 반영
-            sudo mv /tmp/ai.umcedison.site.conf /etc/nginx/sites-available/ai.umcedison.site.conf
-            sudo ln -sf /etc/nginx/sites-available/ai.umcedison.site.conf /etc/nginx/sites-enabled/ai.umcedison.site.conf
-
+            sudo rm -f  /etc/nginx/sites-enabled/ai.umcedison.site.conf || true
+            sudo rm -rf /etc/nginx/sites-available/ai.umcedison.site.conf || true
+            sudo mv /tmp/nginx.conf /etc/nginx/sites-available/ai.umcedison.site.conf
+            sudo ln -s /etc/nginx/sites-available/ai.umcedison.site.conf \
+                       /etc/nginx/sites-enabled/ai.umcedison.site.conf
+                 
             sudo mkdir -p /var/www/certbot
             sudo chown www-data:www-data /var/www/certbot || true
             
