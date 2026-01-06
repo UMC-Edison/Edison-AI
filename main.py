@@ -16,6 +16,10 @@ if not os.path.exists(MODEL_PATH):
     raise FileNotFoundError(f"모델 파일이 존재하지 않습니다: {MODEL_PATH}")
 model = Doc2Vec.load(MODEL_PATH)
 
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "service": "edison-ai"}
+
 class Memo(BaseModel):
     localIdx: str
     content: str
